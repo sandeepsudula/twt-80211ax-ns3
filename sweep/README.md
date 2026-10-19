@@ -7,7 +7,7 @@ always-on (CAM) and legacy power save (PSM) in ns-3.
 |---|---|
 | `run_sweep.py` | Runs every configuration in parallel, can resume after an interruption, merges the results into `results/all_runs.csv` |
 | `analyze.py` | Seed-averaged metrics with 95% CIs, savings paired by seed against CAM and PSM, plots, `report.txt` |
-| `sweep.json` | Full grid: 2 traffic types × 5 station counts × (CAM + PSM + 2 TWT variants × 28 settings) × 10 seeds = 5,700 runs |
+| `sweep.json` | Full grid: 2 traffic types × 5 station counts × (CAM + PSM + 2 TWT variants × 27 settings) × 10 seeds = 5,600 runs |
 | `sweep_quick.json` | Small grid for checking that the scenario works |
 | `mock_sim.py` | Fake simulator that produces **synthetic** numbers, used only to test the pipeline |
 
