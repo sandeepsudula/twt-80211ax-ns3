@@ -1,0 +1,13 @@
+{
+  "simTimeS": 10,
+  "seeds": 3,
+  "modes": ["cam", "psm", "twt"],
+  "traffic": ["iot"],
+  "nSta": [10, 40],
+  "twt": {
+    "wakeIntervalMs": [25, 100, 500],
+    "dutyCycle": [0.1, 0.25],
+    "minSpMs": 1.0
+  },
+  "extraArgs": {}
+}

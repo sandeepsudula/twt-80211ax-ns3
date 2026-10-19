@@ -1,0 +1,7 @@
+__pycache__/
+results/
+figures/
+mock_results/
+mock_figures/
+*.pcap
+.DS_Store
