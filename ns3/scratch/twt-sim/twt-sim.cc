@@ -67,9 +67,14 @@ struct SleepTracker
     Time sleep{0};
     Time lastEnd{0};          // end of the last state period reported by the trace
     WifiPhyState lastState{WifiPhyState::IDLE};
+    bool closed{false};
 
     void Add(Time start, Time duration, WifiPhyState state)
     {
+        if (closed)
+        {
+            return; // the state in progress at the window end was accounted in Close()
+        }
         const Time end = start + duration;
         lastEnd = end;
         lastState = state;
@@ -92,6 +97,7 @@ struct SleepTracker
         {
             sleep += winEnd - Max(lastEnd, winStart);
         }
+        closed = true;
     }
 };
 
@@ -140,6 +146,7 @@ main(int argc, char* argv[])
     double pktIntervalMs{0.0};
     std::string outFile{"twt-sim.csv"};
     bool verbose{false};
+    int32_t traceSta{-1};
 
     CommandLine cmd(__FILE__);
     cmd.AddValue("mode", "cam | psm | twt", mode);
@@ -157,6 +164,7 @@ main(int argc, char* argv[])
     cmd.AddValue("pktIntervalMs", "override packet interval (ms)", pktIntervalMs);
     cmd.AddValue("outFile", "per-station CSV output", outFile);
     cmd.AddValue("verbose", "print a per-run summary", verbose);
+    cmd.AddValue("traceSta", "print PHY state periods of this STA (debug)", traceSta);
     cmd.Parse(argc, argv);
 
     NS_ABORT_MSG_IF(mode != "cam" && mode != "psm" && mode != "twt", "unknown mode " << mode);
@@ -308,6 +316,18 @@ main(int argc, char* argv[])
         staPhy->GetState()->TraceConnectWithoutContext(
             "State",
             MakeCallback(&SleepTracker::Add, &sleepTrackers[i]));
+    }
+    if (traceSta >= 0 && traceSta < static_cast<int32_t>(nSta))
+    {
+        DynamicCast<WifiNetDevice>(staDevs.Get(traceSta))
+            ->GetPhy()
+            ->GetState()
+            ->TraceConnectWithoutContext(
+                "State",
+                MakeCallback(+[](Time start, Time duration, WifiPhyState state) {
+                    std::cout << "PHY " << start.As(Time::US) << " +" << duration.As(Time::US)
+                              << " " << state << "\n";
+                }));
     }
     Simulator::Schedule(tStart, [&]() {
         for (uint32_t i = 0; i < nSta; ++i)

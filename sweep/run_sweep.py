@@ -31,6 +31,8 @@ STATION_FIELDS = [
     "staId", "energyJ", "txPackets", "rxPackets", "rxBytes",
     "meanDelayMs", "p95DelayMs", "sleepFraction",
 ]
+# "twt": stay awake for the whole SP; "twtes": TWT with early sleep
+TWT_MODES = {"twt": [], "twtes": ["--twtEarlySleep=1"]}
 PARAM_FIELDS = [
     "runId", "mode", "traffic", "nSta", "wakeIntervalMs", "spDurationMs",
     "dutyCycle", "run", "simTimeS",
@@ -48,7 +50,7 @@ def expand_grid(cfg):
                 for mode in cfg["modes"]:
                     base = dict(mode=mode, traffic=traffic, nSta=int(n_sta),
                                 run=run, simTimeS=cfg["simTimeS"])
-                    if mode == "twt":
+                    if mode in TWT_MODES:
                         for wi in twt["wakeIntervalMs"]:
                             for duty in twt["dutyCycle"]:
                                 sp = round(float(wi) * float(duty), 3)
@@ -66,23 +68,23 @@ def expand_grid(cfg):
 
 def run_id(p):
     s = f"{p['mode']}_{p['traffic']}_n{p['nSta']}"
-    if p["mode"] == "twt":
+    if p["mode"] in TWT_MODES:
         s += f"_wi{p['wakeIntervalMs']:g}_sp{p['spDurationMs']:g}"
     return s + f"_r{p['run']}"
 
 
 def program_args(p, out_file, extra):
     args = [
-        f"--mode={p['mode']}",
+        f"--mode={'twt' if p['mode'] in TWT_MODES else p['mode']}",
         f"--traffic={p['traffic']}",
         f"--nSta={p['nSta']}",
         f"--simTime={p['simTimeS']}",
         f"--RngRun={p['run']}",
         f"--outFile={out_file}",
     ]
-    if p["mode"] == "twt":
+    if p["mode"] in TWT_MODES:
         args += [f"--wakeIntervalMs={p['wakeIntervalMs']:g}",
-                 f"--spDurationMs={p['spDurationMs']:g}"]
+                 f"--spDurationMs={p['spDurationMs']:g}"] + TWT_MODES[p["mode"]]
     args += [f"--{k}={v}" for k, v in extra.items()]
     return args
 
@@ -147,8 +149,8 @@ def main():
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--config", default=str(HERE / "sweep.json"))
     ap.add_argument("--ns3-dir", help="path to ns-3 (folder containing ./ns3)")
-    ap.add_argument("--program", default="scratch/twt-sim",
-                    help="ns-3 program to run (default: scratch/twt-sim)")
+    ap.add_argument("--program", default="twt-sim",
+                    help="ns-3 program to run (default: twt-sim, i.e. scratch/twt-sim/)")
     ap.add_argument("--out", default="results", help="output folder")
     ap.add_argument("--jobs", type=int, default=4, help="parallel runs")
     ap.add_argument("--timeout", type=int, default=3600, help="seconds per run")

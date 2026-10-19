@@ -1,12 +1,39 @@
 {
   "simTimeS": 30,
   "seeds": 10,
-  "modes": ["cam", "psm", "twt"],
-  "traffic": ["iot", "video"],
-  "nSta": [5, 10, 20, 40, 60],
+  "modes": [
+    "cam",
+    "psm",
+    "twt",
+    "twtes"
+  ],
+  "traffic": [
+    "iot",
+    "video"
+  ],
+  "nSta": [
+    5,
+    10,
+    20,
+    40,
+    60
+  ],
   "twt": {
-    "wakeIntervalMs": [10, 25, 50, 100, 250, 500, 1000],
-    "dutyCycle": [0.05, 0.1, 0.25, 0.5],
+    "wakeIntervalMs": [
+      10,
+      25,
+      50,
+      100,
+      250,
+      500,
+      1000
+    ],
+    "dutyCycle": [
+      0.05,
+      0.1,
+      0.25,
+      0.5
+    ],
     "minSpMs": 1.0
   },
   "extraArgs": {}

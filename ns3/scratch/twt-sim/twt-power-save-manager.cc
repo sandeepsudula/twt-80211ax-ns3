@@ -238,7 +238,19 @@ TwtPowerSaveManager::TrySleep()
     NS_LOG_FUNCTION(this);
     m_pollEvent.Cancel();
 
-    if (!m_active || !MayDozeNow())
+    if (!m_active)
+    {
+        return;
+    }
+    if (m_inSp && m_earlySleep && Simulator::Now() - m_spStart < m_minAwake)
+    {
+        // too early in the SP: check again once the minimum awake time has elapsed
+        m_pollEvent = Simulator::Schedule(m_spStart + m_minAwake - Simulator::Now(),
+                                          &TwtPowerSaveManager::TrySleep,
+                                          this);
+        return;
+    }
+    if (!MayDozeNow())
     {
         return;
     }

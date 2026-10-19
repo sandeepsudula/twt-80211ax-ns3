@@ -5,7 +5,8 @@ legacy power save (PS-Poll) and always-on operation. The comparison covers
 energy, throughput, latency and packet loss across TWT wake intervals, service
 period durations and station counts.
 
-> **Status:** work in progress. The ns-3 scenario has not yet been validated end to end.
+> **Status:** the scenario builds and runs on ns-3.48, and the sweep and analysis pipeline works
+> end to end. A quick sweep (IoT traffic, 10/40 STAs, 3 seeds) has run; the full sweep is next.
 
 ## Layout
 
@@ -13,7 +14,7 @@ period durations and station counts.
 |---|---|
 | `ns3/scratch/twt-sim/` | ns-3 program: copy into `<ns-3.48>/scratch/twt-sim/` |
 | `ns3/scratch/twt-sim/twt-power-save-manager.{h,cc}` | Individual TWT power save manager (subclass of ns-3's `PowerSaveManager`) |
-| `ns3/scratch/twt-sim/twt-sim.cc` | Scenario: 1 HE AP, N HE STAs, uplink UDP; modes `cam`, `psm`, `twt` |
+| `ns3/scratch/twt-sim/twt-sim.cc` | Scenario: 1 HE AP, N HE STAs, uplink UDP; modes `cam`, `psm`, `twt` (`--twtEarlySleep` for early sleep) |
 | `sweep/` | Parallel sweep driver, analysis/plots, configs ([details](sweep/README.md)) |
 
 ## How TWT is modeled
@@ -36,6 +37,23 @@ Association and Block Ack agreements are set up with `WifiStaticSetupHelper`.
 Energy uses `WifiRadioEnergyModel` with ns-3's default currents
 (TX 380 mA, RX 313 mA, idle 273 mA, sleep 33 mA, 3 V).
 
+## First observations (quick sweep, IoT uplink, 100 B every 100 ms)
+
+| Mode | Energy savings vs always-on | Mean latency |
+|---|---|---|
+| Legacy PS (PS-Poll) | ~87% | < 1 ms |
+| TWT, awake for the whole SP | 66–79% (depends on SP share) | ≈ half the wake interval |
+| TWT + early sleep | ~87–88% | ≈ half the wake interval |
+
+For sparse uplink-only traffic, ns-3's legacy power save is already near-ideal. It
+sleeps right after each transmission and wakes only for beacons, so TWT gains
+nothing unless the STA dozes as soon as it is done. TWT's advantage shows up under
+load: in a 20-STA, 2 Mb/s-per-STA test, legacy power save slept only ~14% of the time,
+while TWT (50 ms interval, 25 ms SP) slept ~49%, used ~43% less energy than always-on, and
+cut mean latency from ~32 ms to ~9 ms by spreading out contention.
+
+These are preliminary single-scenario numbers; the full sweep will replace them.
+
 ## Quick start
 
 ```bash
@@ -44,6 +62,8 @@ cd <ns-3.48>
 ./ns3 configure -d optimized --enable-modules="wifi;flow-monitor;applications;internet;energy"
 ./ns3 build twt-sim
 ./ns3 run "twt-sim --mode=twt --nSta=20 --wakeIntervalMs=100 --spDurationMs=10 --verbose=1"
+# debug: print the PHY state timeline of one STA
+./ns3 run "twt-sim --mode=twt --simTime=0.5 --traceSta=0"
 
 cd <repo>/sweep
 pip install pandas matplotlib numpy scipy

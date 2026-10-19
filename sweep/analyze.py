@@ -27,6 +27,7 @@ _T975 = {1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365,
          8: 2.306, 9: 2.262, 10: 2.228, 15: 2.131, 20: 2.086, 30: 2.042}
 
 CFG = ["mode", "traffic", "nSta", "wakeIntervalMs", "spDurationMs", "dutyCycle"]
+TWT_LABEL = {"twt": "TWT", "twtes": "TWT+early sleep"}
 METRICS = ["energyPerStaJ", "nJPerBit", "throughputMbps", "lossPct",
            "meanDelayMs", "p95DelayMs", "sleepFraction",
            "savingsVsCamPct", "savingsVsPsmPct"]
@@ -90,15 +91,20 @@ def _baseline(s, traffic, n_sta, mode, col):
 
 
 def plot_vs_interval(s, traffic, n_sta, col, ylabel, fname, out, logy=False):
-    t = s[(s.traffic == traffic) & (s.nSta == n_sta) & (s["mode"] == "twt")]
+    t = s[(s.traffic == traffic) & (s.nSta == n_sta) & s["mode"].isin(TWT_LABEL)]
     if t.empty:
         return
     fig, ax = plt.subplots(figsize=(6.4, 4.2))
-    for duty, grp in t.groupby("dutyCycle"):
+    styles = {"twt": "-", "twtes": "--"}
+    colors = {}
+    for (mode, duty), grp in t.groupby(["mode", "dutyCycle"]):
         grp = grp.sort_values("wakeIntervalMs")
-        ax.errorbar(grp.wakeIntervalMs, grp[col], yerr=grp[col + "_ci"],
-                    marker="o", capsize=3, label=f"TWT, SP = {duty:.0%} of interval")
-    for mode, style in [("psm", "--"), ("cam", ":")]:
+        kw = {"color": colors[duty]} if duty in colors else {}
+        line = ax.errorbar(grp.wakeIntervalMs, grp[col], yerr=grp[col + "_ci"], ls=styles[mode],
+                           marker="o", capsize=3,
+                           label=f"{TWT_LABEL[mode]}, SP = {duty:.0%} of interval", **kw)
+        colors.setdefault(duty, line[0].get_color())
+    for mode, style in [("psm", "-."), ("cam", ":")]:
         b = _baseline(s, traffic, n_sta, mode, col)
         if b is not None and not np.isnan(b[0]):
             ax.axhline(b[0], ls=style, color="gray", label=f"{mode.upper()}")
@@ -127,13 +133,20 @@ def pareto_front(x, y):
 
 def plot_pareto(s, traffic, n_sta, out):
     sub = s[(s.traffic == traffic) & (s.nSta == n_sta)]
-    t = sub[sub["mode"] == "twt"]
+    t = sub[sub["mode"].isin(TWT_LABEL)]
     if t.empty:
         return
     fig, ax = plt.subplots(figsize=(6.4, 4.4))
-    sc = ax.scatter(t.meanDelayMs, t.energyPerStaJ, c=np.log10(t.wakeIntervalMs),
-                    s=20 + 120 * t.dutyCycle, cmap="viridis", alpha=0.85,
-                    label="TWT (size = duty cycle)")
+    vmin, vmax = np.log10(t.wakeIntervalMs.min()), np.log10(t.wakeIntervalMs.max())
+    sc = None
+    for mode, mk in [("twt", "o"), ("twtes", "D")]:
+        tm = t[t["mode"] == mode]
+        if tm.empty:
+            continue
+        sc = ax.scatter(tm.meanDelayMs, tm.energyPerStaJ, c=np.log10(tm.wakeIntervalMs),
+                        vmin=vmin, vmax=vmax, marker=mk, s=20 + 120 * tm.dutyCycle,
+                        cmap="viridis", alpha=0.85,
+                        label=f"{TWT_LABEL[mode]} (size = SP share)")
     cb = fig.colorbar(sc, ax=ax)
     ticks = sorted(t.wakeIntervalMs.unique())
     cb.set_ticks(np.log10(ticks))
@@ -163,6 +176,8 @@ def plot_pareto(s, traffic, n_sta, out):
 def plot_density(s, traffic, out):
     sub = s[s.traffic == traffic]
     t = sub[sub["mode"] == "twt"]
+    if t.empty:
+        t = sub[sub["mode"] == "twtes"]
     if t.empty or sub.nSta.nunique() < 2:
         return
     wis = sorted(t.wakeIntervalMs.unique())
@@ -172,7 +187,7 @@ def plot_density(s, traffic, out):
     fig, axes = plt.subplots(1, 2, figsize=(11, 4.2))
     for wi in picks:
         g = t[(t.wakeIntervalMs == wi) & (t.dutyCycle == duty)].sort_values("nSta")
-        lab = f"TWT {wi:g} ms, SP {duty:.0%}"
+        lab = f"{TWT_LABEL[t['mode'].iloc[0]]} {wi:g} ms, SP {duty:.0%}"
         axes[0].errorbar(g.nSta, g.savingsVsCamPct, yerr=g.savingsVsCamPct_ci,
                          marker="o", capsize=3, label=lab)
         axes[1].errorbar(g.nSta, g.lossPct, yerr=g.lossPct_ci, marker="o",
@@ -198,12 +213,12 @@ def plot_density(s, traffic, out):
 # ---------------------------------------------------------------------------- report
 def headline(s, max_loss, max_delay):
     lines = []
-    for traffic in sorted(s.traffic.unique()):
-        t = s[(s.traffic == traffic) & (s["mode"] == "twt")]
+    for traffic, mode in [(tr, m) for tr in sorted(s.traffic.unique()) for m in TWT_LABEL]:
+        t = s[(s.traffic == traffic) & (s["mode"] == mode)]
         if t.empty:
             continue
         ok = t[(t.lossPct <= max_loss) & (t.meanDelayMs <= max_delay)]
-        lines.append(f"\n[{traffic}]")
+        lines.append(f"\n[{traffic}, {TWT_LABEL[mode]}]")
         best_any = t.loc[t.savingsVsCamPct.idxmax()]
         lines.append("  Max savings vs CAM (no constraints): "
                      f"{best_any.savingsVsCamPct:.1f}% ± {best_any.savingsVsCamPct_ci:.1f} "
@@ -230,7 +245,7 @@ def headline(s, max_loss, max_delay):
 
 def sanity_checks(runs):
     warn = []
-    twt = runs[runs["mode"] == "twt"]
+    twt = runs[runs["mode"].isin(TWT_LABEL)]
     if not twt.empty and twt.sleepFraction.mean() < 0.01:
         warn.append("TWT runs report almost no sleep time: the PHY is probably never "
                     "put to sleep, so the energy model can't show savings.")
@@ -258,7 +273,10 @@ def main():
 
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    runs = per_run(pd.read_csv(a.csv))
+    raw = pd.read_csv(a.csv)
+    if raw.empty:
+        raise SystemExit(f"{a.csv} has no rows: did every run fail? Check the logs/ folder.")
+    runs = per_run(raw)
     s = summarize(runs)
     runs.to_csv(out / "per_run.csv", index=False)
     s.to_csv(out / "summary.csv", index=False)
