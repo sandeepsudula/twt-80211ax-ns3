@@ -16,6 +16,7 @@ period durations and station counts.
 | `ns3/scratch/twt-sim/twt-power-save-manager.{h,cc}` | Individual TWT power save manager (subclass of ns-3's `PowerSaveManager`) |
 | `ns3/scratch/twt-sim/twt-sim.cc` | Scenario: 1 HE AP, N HE STAs, uplink UDP; modes `cam`, `psm`, `twt` (`--twtEarlySleep` for early sleep) |
 | `sweep/` | Parallel sweep driver, analysis/plots, configs ([details](sweep/README.md)) |
+| `dqn/` | Deep Q-Network that picks the TWT wake interval and SP per network ([details](dqn/README.md)) |
 
 ## How TWT is modeled
 
@@ -53,6 +54,14 @@ while TWT (50 ms interval, 25 ms SP) slept ~49%, used ~43% less energy than alwa
 cut mean latency from ~32 ms to ~9 ms by spreading out contention.
 
 These are preliminary single-scenario numbers; the full sweep will replace them.
+
+## Learning the TWT settings with a DQN
+
+`dqn/` trains a Deep Q-Network that reads a network's situation (number of stations, packet
+interval and size, load, delay target) and picks one of 22 settings: always on, or a TWT
+wake interval / SP pair. Each choice is scored by one `twt-sim` run. On 30 unseen networks the
+DQN used 22% less power than the best single fixed TWT setting and 84% less than always-on,
+with no delay-target violations. See [dqn/README.md](dqn/README.md).
 
 ## Quick start
 

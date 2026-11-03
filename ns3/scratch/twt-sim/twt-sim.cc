@@ -264,7 +264,8 @@ main(int argc, char* argv[])
 
     // ---- energy (stations only)
     BasicEnergySourceHelper energySource;
-    energySource.Set("BasicEnergySourceInitialEnergyJ", DoubleValue(1e9));
+    // 1e6 J: large enough never to run out; 1e9 overflows ns-3's time-until-empty while sleeping
+    energySource.Set("BasicEnergySourceInitialEnergyJ", DoubleValue(1e6));
     energy::EnergySourceContainer sources = energySource.Install(staNodes);
     WifiRadioEnergyModelHelper radioEnergy; // ns-3 default currents
     energy::DeviceEnergyModelContainer models = radioEnergy.Install(staDevs, sources);
