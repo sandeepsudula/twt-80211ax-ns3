@@ -1,0 +1,37 @@
+25 test networks, delay target 100.0 ms
+
+policy                               reward  power W  viol %  loss %  sleep %
+always on (cam)                      -1.003    0.823     0.0    0.00      0.0
+fixed twt 100/10                     -0.209    0.172     0.0    0.00     90.0
+best fixed (twt 100/2 ms)            -0.139    0.114     0.0    0.00     98.0
+DQN                                  -0.156    0.128     0.0    0.00     96.1
+oracle (best per network)            -0.139    0.114     0.0    0.00     98.0
+
+DQN picked the oracle's action in 4% of networks
+
+per-network choices (DQN vs oracle):
+  nSta=15 1200 B every   10.4 ms -> DQN twt 100/2 ms    oracle twt 100/2 ms
+  nSta=28  500 B every  283.7 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta= 8  500 B every   91.5 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta= 7  500 B every   16.3 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta=15  500 B every   90.2 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta= 7 1200 B every   87.1 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta=13 1200 B every  424.4 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta= 4 1200 B every  459.9 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta=15 1200 B every   71.8 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta= 6  100 B every  166.5 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta= 8  500 B every   35.2 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta=16  500 B every   11.1 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta=18 1200 B every  184.1 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta= 2  100 B every  395.8 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta=29  100 B every  204.0 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta= 7  500 B every   14.8 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta=15  100 B every  319.5 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta=20  100 B every  178.4 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta= 9 1200 B every  102.9 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta=28  500 B every  235.1 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta= 9  100 B every  304.5 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta= 8 1200 B every  230.4 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta=19 1200 B every   20.7 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta=20  500 B every   75.9 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
+  nSta= 6  100 B every  462.0 ms -> DQN twt 50/2 ms     oracle twt 100/2 ms
