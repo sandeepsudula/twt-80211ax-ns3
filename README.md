@@ -17,6 +17,7 @@ period durations and station counts.
 | `ns3/scratch/twt-sim/twt-sim.cc` | Scenario: 1 HE AP, N HE STAs, uplink UDP; modes `cam`, `psm`, `twt` (`--twtEarlySleep` for early sleep) |
 | `sweep/` | Parallel sweep driver, analysis/plots, configs ([details](sweep/README.md)) |
 | `dqn/` | Deep Q-Network that picks the TWT wake interval and SP per network ([details](dqn/README.md)) |
+| `halow/` | `HaLowWrapper`: runs the DQN's chosen TWT schedule on a real Wi-Fi HaLow (MM6108) access point ([details](halow/README.md)) |
 
 ## How TWT is modeled
 

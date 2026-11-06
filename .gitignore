@@ -5,3 +5,6 @@ mock_results/
 mock_figures/
 *.pcap
 .DS_Store
+halow/bench.json
+halow_runs.csv
+.pytest_cache/

@@ -1,0 +1,20 @@
+{
+  "_comment": "Copy to bench.json and put in your stations' real MAC addresses (iw dev wlan0 station dump on the AP lists them). The MACs below are placeholders.",
+  "ap_host": "mmap",
+  "ssh_options": [],
+  "interface": "wlan0",
+  "stations": [
+    {"name": "sta1", "mac": "02:00:00:00:00:01"},
+    {"name": "sta2", "mac": "02:00:00:00:00:02"},
+    {"name": "sta3", "mac": "02:00:00:00:00:03"},
+    {"name": "sta4", "mac": "02:00:00:00:00:04"}
+  ],
+  "settle_s": 35,
+  "measure_s": 25,
+  "verify_timeout_s": 30,
+  "poll_s": 2,
+  "max_steps": null,
+  "allow_warnings": true,
+  "energy_model": {"idle_ma": 273.0, "sleep_ma": 33.0, "voltage_v": 3.0},
+  "log_csv": "halow_runs.csv"
+}
